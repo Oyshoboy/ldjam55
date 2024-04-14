@@ -8,6 +8,8 @@ public class handanimations : MonoBehaviour
 	public GameObject OculusController;
 	public GameObject StickUp;
 	public GameObject StickFront;
+	
+	public string myDefaultAnimation = "GrabLarge";
 
     Animator anim;
     int Idle = Animator.StringToHash("Idle");
@@ -38,15 +40,22 @@ public class handanimations : MonoBehaviour
 
     void Start ()
     {
-        anim = GetComponent<Animator>();
-		OculusController.SetActive (false);
-		ViveController.SetActive (false);
-		StickUp.SetActive (false);
-		StickFront.SetActive (false);
+		anim = GetComponent<Animator>();
+		// OculusController.SetActive (false);
+		// ViveController.SetActive (false);
+		// StickUp.SetActive (false);
+		// StickFront.SetActive (false);
+
+		if (myDefaultAnimation != "")
+		{
+			anim.SetBool(myDefaultAnimation, true);
+		}
+		
     }
 
     void Update()
     {
+	    if (myDefaultAnimation != "") return;
         if (Input.GetKeyDown(KeyCode.Q))
         {
             anim.SetTrigger(Idle);
