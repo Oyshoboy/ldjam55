@@ -30,7 +30,7 @@ public static class Utilities
     public enum EntityType
     {
         Random,
-        CatKnight,
+        KnightKitty,
         Werewolf,
         CrystalGolem,
         Einstein,

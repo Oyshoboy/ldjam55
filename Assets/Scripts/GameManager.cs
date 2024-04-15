@@ -8,6 +8,24 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
+    [Header("Audio")]
+    public AudioSource whoosh;
+    public AudioSource boom;
+    public AudioSource grab;
+    public AudioSource release;
+    public AudioSource splash;
+    public AudioSource charge;
+    public AudioSource fail;
+    public AudioSource success;
+    public AudioSource walkaway;
+    public AudioSource lightsOn;
+    public AudioSource victory;
+    
+    [Header("Intro management")]
+    public GameObject lights;
+    public bool introComplete = false;
+    public TMP_Text introText;
+    
     [Header("References")]
     public GameObject hand;
     public Animator pointerAnimator;
@@ -55,13 +73,13 @@ public class GameManager : MonoBehaviour
     [Header("Debug")]
     public GameObject summonedObject;
     private CombinationRecords _recordPassed;
-    private float timeForObserving;
+    public float timeForObserving;
     public float minTimeForObserving = 3f;
     public Utilities.EntityType lastGoal = Utilities.EntityType.Hawking;
     public bool isRotating;
     
     [Header("Game Flow")]
-    public Utilities.EntityType nextGoal = Utilities.EntityType.CatKnight;
+    public Utilities.EntityType nextGoal = Utilities.EntityType.KnightKitty;
     
     [Header("Typography")]
     public TMP_Text goalText;
@@ -71,6 +89,14 @@ public class GameManager : MonoBehaviour
     public TMP_Text entityText;
 
     private static readonly int Walkaway = Animator.StringToHash("walkaway");
+
+    private void PlayOneShot(AudioSource source)
+    {
+        var sourcePitch = source.pitch;
+        var pitch = sourcePitch >= 0.85f ? UnityEngine.Random.Range(.9f, 1.1f) : sourcePitch;
+        source.pitch = pitch;
+        source.PlayOneShot(source.clip);
+    }
 
     private void Start()
     {
@@ -142,14 +168,28 @@ public class GameManager : MonoBehaviour
             if(timeForObserving > Time.time) return;
             helperBlinker.SetActive(false);
             cameraAnimator.SetBool(Observing, false);
+            PlayOneShot(whoosh);
             ResetObjects();
             DisableTexts();
+            
+            if (!introComplete)
+            {
+                introText.gameObject.SetActive(false);
+                introComplete = true;
+                Invoke(nameof(CompleteIntro), 1f);
+            }
         }
 
         if (timeForObserving < Time.time && !helperBlinker.activeInHierarchy && summonStatus == Utilities.SummonStatus.Busy)
         {
             helperBlinker.SetActive(true);
         }
+    }
+    
+    private void CompleteIntro()
+    {
+        PlayOneShot(lightsOn);
+        lights.SetActive(true);
     }
 
     private void ResetObjects()
@@ -171,6 +211,7 @@ public class GameManager : MonoBehaviour
             // destroy summoned object
             var summonedAnimator = summonedObject.GetComponent<Animator>();
             summonedObject.transform.localEulerAngles += new Vector3(0f, 55f, 0f);
+            PlayOneShot(walkaway);
             if (summonedAnimator)
             {
                 summonedAnimator.SetBool(Walkaway, true);
@@ -208,10 +249,12 @@ public class GameManager : MonoBehaviour
             var potDetected = PotDetector();
             if (potDetected && summonStatus == Utilities.SummonStatus.Ready)
             {
+                PlayOneShot(splash);
                 _grabbedItem.PlacedToPot();
                 potDetected.PutItem(_grabbedItem);
             } else
             {
+                PlayOneShot(release);
                 _grabbedItem.Release();
             }
             
@@ -259,6 +302,7 @@ public class GameManager : MonoBehaviour
                 var hitGrabController = hit.collider.GetComponent<item_controller>();
                 if (hitGrabController)
                 {
+                    PlayOneShot(grab);
                     MoveHandWhenGrabbing(true);
                     hitGrabController.Grab(grabbingPoint);
                     _grabbedItem = hitGrabController;
@@ -326,6 +370,7 @@ public class GameManager : MonoBehaviour
         if(summonStatus != Utilities.SummonStatus.Ready) return;
         UpdateSummonStatus(Utilities.SummonStatus.Busy);
         camJiggle.enabled = true;
+        PlayOneShot(charge);
         
         _recordPassed = null;
         var combinations = combinationsMenu.combinations;
@@ -368,6 +413,7 @@ public class GameManager : MonoBehaviour
             var toSpawn = entitiesMenu.entities.Find(x => x.type == _recordPassed.result).prefab;
             if (toSpawn)
             {
+                PlayOneShot(boom);
                 StopJigglingCamera();
                 var fx = Instantiate(spawnEffectPrefab, spawnEffectPoint.transform.position, Quaternion.identity);
                 var spawned = Instantiate(toSpawn, spawnPoint.transform.position, Quaternion.Euler(Vector3.zero));
@@ -394,16 +440,23 @@ public class GameManager : MonoBehaviour
 
     private void EntitySuccess()
     {
+        PlayOneShot(success);
         failedText.gameObject.SetActive(false);
         var text = $"NICE! I'VE SUMMONNED {nextGoal.ToString().ToUpper()}! \nWHO'S UP NEXT?";
 
         if (nextGoal == lastGoal)
         {
             text = "WOW! I'VE SUMMONNED ALL THE ENTITIES! \nNOW I CAN DO WHATEVER I WANT!";
+            Invoke(nameof(VictorySound), 1f);
         }
         
         successText.text = text;
         successText.gameObject.SetActive(true);
+    }
+
+    private void VictorySound()
+    {
+        PlayOneShot(victory);
     }
     
     private void NotThiEntity()
@@ -415,6 +468,7 @@ public class GameManager : MonoBehaviour
     
     private void NothingToSummon()
     {
+        PlayOneShot(fail);
         failedText.gameObject.SetActive(true);
         failedText.text = "DAMN! NOTHING WAS SUMMONED";
         successText.gameObject.SetActive(false);
@@ -429,6 +483,7 @@ public class GameManager : MonoBehaviour
     private void SpawnStageTwo()
     {
         cameraAnimator.SetBool(Observing, true);
+        PlayOneShot(whoosh);
         if (_recordPassed == null)
         {
             StopJigglingCamera();

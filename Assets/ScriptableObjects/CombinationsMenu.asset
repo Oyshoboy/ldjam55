@@ -55,7 +55,7 @@ MonoBehaviour:
   - recipe:
       itemOne: 5
       itemTwo: 12
-      itemThree: 2
+      itemThree: 7
     result: 7
   - recipe:
       itemOne: 2
