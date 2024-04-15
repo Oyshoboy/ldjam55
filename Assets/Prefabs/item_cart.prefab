@@ -46,8 +46,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d7d3aa1f5ed5ce438640f5fe68a3e25, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  JiggleTiltValue: 12
-  JiggleFrequency: 22
+  JiggleTiltValue: 5
+  JiggleFrequency: 17
   JiggleDecelerate: 1.5
   AdditionalSpeedValue: 1
   ConstantJiggleValue: 0
@@ -312,7 +312,7 @@ MeshRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5776657279368226161}
-  m_Enabled: 1
+  m_Enabled: 0
   m_CastShadows: 1
   m_ReceiveShadows: 1
   m_DynamicOccludee: 1

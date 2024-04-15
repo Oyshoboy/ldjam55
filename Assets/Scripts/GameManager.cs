@@ -91,7 +91,6 @@ public class GameManager : MonoBehaviour
         RaycastHit hit;
         
         var layerMaskInt = potMask.value;
-        Debug.Log("pot detector");
         
         if (Physics.SphereCast(ray, .1f, out hit, 20f, layerMaskInt))
         {
@@ -127,8 +126,6 @@ public class GameManager : MonoBehaviour
                     _grabbedItem = hitGrabController;
                 }
             }
-            
-            Debug.Log(hit.collider.name);
         }
     }
 
