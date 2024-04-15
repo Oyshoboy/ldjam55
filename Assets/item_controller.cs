@@ -1,23 +1,28 @@
 using System.Collections;
 using System.Collections.Generic;
 using FIMSpace.Jiggling;
+using TMPro;
 using UnityEngine;
 
 public class item_controller : MonoBehaviour
 {
     [Header("references")]
-    public GameObject text;
+    public TMP_Text text;
     public GameObject myParent;
     public FJiggling_Simple myJiggler;
     
     private Vector3 _initialPosition;
     private Quaternion _initialRotation;
+    
+    public Utilities.ElementsType elementType;
     // Start is called before the first frame update
     void Start()
     {
         if (!myParent) return;
         _initialRotation = myParent.transform.rotation;
         _initialPosition = myParent.transform.position;
+        
+        text.text = elementType.ToString() ?? "Unknown";
     }
 
     // Update is called once per frame
@@ -28,7 +33,7 @@ public class item_controller : MonoBehaviour
 
     public void Grab(GameObject grabbingPoint)
     {
-        text.SetActive(false);
+        text.gameObject.SetActive(true);
         myParent.transform.position = grabbingPoint.transform.position;
         myParent.transform.rotation = grabbingPoint.transform.rotation;
         myParent.transform.SetParent(grabbingPoint.transform);
@@ -37,7 +42,7 @@ public class item_controller : MonoBehaviour
 
     public void Release()
     {
-        text.SetActive(true);
+        text.gameObject.SetActive(false);
         myParent.transform.SetParent(null);
         myParent.transform.position = _initialPosition;
         myParent.transform.rotation = _initialRotation;

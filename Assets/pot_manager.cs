@@ -9,6 +9,9 @@ public class pot_manager : MonoBehaviour
     public FJiggling_Simple myJiggler;
     public ParticleSystem splash;
     public List<item_controller> items = new List<item_controller>();
+    public MeshRenderer[] indicators;
+    public Material indicatorOn;
+    public Material indicatorOff;
     // Start is called before the first frame update
     void Start()
     {
@@ -26,5 +29,8 @@ public class pot_manager : MonoBehaviour
         myJiggler.StartJiggle();
         splash.Play();
         items.Add(item);
+        
+        if(items.Count - 1 > indicators.Length) return;
+        indicators[items.Count - 1].material = indicatorOn;
     }
 }
