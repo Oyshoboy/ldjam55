@@ -44,7 +44,7 @@ public class item_controller : MonoBehaviour
         myJiggler.StartJiggle();
     }
 
-    public void PlaceToPot()
+    public void PlacedToPot()
     {
         Debug.Log($"{myParent.name} placed to pot");
         myParent.SetActive(false);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using FIMSpace.Jiggling;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -47,6 +48,7 @@ public class GameManager : MonoBehaviour
         HandleAnimationState();
     }
 
+    // ReSharper disable Unity.PerformanceAnalysis
     private void HandleAnimationState()
     {
         if(Input.GetMouseButtonDown(0) && !_isGrabbing)
@@ -68,16 +70,15 @@ public class GameManager : MonoBehaviour
             var potDetected = PotDetector();
             if (potDetected)
             {
-                _grabbedItem.PlaceToPot();
-                _grabbedItem = null;
-                MoveHandWhenGrabbing(false);
-                potDetected.ItemPlaced();
+                _grabbedItem.PlacedToPot();
+                potDetected.PutItem(_grabbedItem);
             } else
             {
                 _grabbedItem.Release();
-                _grabbedItem = null;
-                MoveHandWhenGrabbing(false);
             }
+            
+            MoveHandWhenGrabbing(false);
+            _grabbedItem = null;
         }
     }
 
