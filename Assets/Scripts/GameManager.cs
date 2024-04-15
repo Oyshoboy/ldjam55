@@ -21,6 +21,15 @@ public class GameManager : MonoBehaviour
     public AudioSource lightsOn;
     public AudioSource victory;
     public AudioSource click;
+    public AudioSource impact;
+    
+    [Header("Screamer")]
+    public AudioSource suspience;
+    public AudioSource horror_reveal;
+    public AudioSource night_scream;
+    public AudioSource stomping;
+    public AudioSource metal_ambient;
+    public AudioSource heartbeat;
 
     [Header("Intro management")]
     public GameObject lights;
@@ -39,7 +48,7 @@ public class GameManager : MonoBehaviour
     public GameObject trackingPoint;
     public Transform lookAtPoint;
     public GameObject grabbingPoint;
-    public GameObject[] allItems;
+    public item_controller[] allItems;
     public Animator cameraAnimator;
     public pot_manager potManager;
     public GameObject spawnEffectPrefab;
@@ -83,6 +92,8 @@ public class GameManager : MonoBehaviour
     public bool isRotating;
     private string[] _cachedIntroText;
     private bool _mainIntroComplete;
+    public int failsCount;
+    public int maxFails = 3;
     
     [Header("Game Flow")]
     public Utilities.EntityType nextGoal = Utilities.EntityType.KnightKitty;
@@ -258,7 +269,7 @@ public class GameManager : MonoBehaviour
         // enable all items
         foreach (var item in allItems)
         {
-            item.SetActive(true);
+            item.myParent.SetActive(true);
         }
 
         if (summonedObject)
@@ -425,7 +436,6 @@ public class GameManager : MonoBehaviour
         if(summonStatus != Utilities.SummonStatus.Ready) return;
         UpdateSummonStatus(Utilities.SummonStatus.Busy);
         camJiggle.enabled = true;
-        PlayOneShot(charge);
         
         _recordPassed = null;
         var combinations = combinationsMenu.combinations;
@@ -449,6 +459,22 @@ public class GameManager : MonoBehaviour
                 break;
             }
         }
+
+        if (_recordPassed == null)
+        {
+            failsCount++;
+            
+            if (failsCount >= maxFails)
+            {
+                failsCount = maxFails;
+            }
+            
+        }
+        else
+        {
+            PlayOneShot(charge);
+        }
+ 
         
         timeForObserving = Time.time + minTimeForObserving;
         Invoke(nameof(SpawnStageOne), 1f);
@@ -461,6 +487,13 @@ public class GameManager : MonoBehaviour
             timeForObserving -= minTimeForObserving / 2f;
             Debug.Log("Failed to summon");
             var fx = Instantiate(spawnErrorEffectPrefab, spawnEffectPoint.transform.position, Quaternion.identity);
+            
+            var chancesLeft = maxFails - failsCount;
+
+            if (chancesLeft <= 0)
+            {
+                PlayOneShot(impact);
+            }
         }
         else
         {
@@ -481,16 +514,59 @@ public class GameManager : MonoBehaviour
         Invoke(nameof(SpawnStageTwo), .5f);
     }
 
+    private void EnableHelperAttentionJiggler()
+    {
+
+        CombinationRecords record = null;
+        // nextGoal item
+        foreach (var item in combinationsMenu.combinations)
+        {
+            Debug.Log($"Item: {item.result}");
+            if (item.result != nextGoal) continue;
+            record = item;
+            break;
+        }
+        
+        Debug.Log($"Next goal: {nextGoal}, found: {record}");
+        
+        if(record == null) return;
+
+        var count = 0;
+        foreach (var item in allItems)
+        {
+            if(count >= failsCount) break;
+            if (item.elementType == record.recipe.itemOne || item.elementType == record.recipe.itemTwo || item.elementType == record.recipe.itemThree)
+            {
+                if (!item.attentionJiggle)
+                {
+                    item.ActivateAttentionJiggler();
+                }
+
+                count++;
+            }
+        }
+    }
+
     private void NextGoalProcess()
     {
         EntitySuccess();
         UpdateGoalText("");
+        ResetAttentionJigglers();
         var nextEntityGoal = nextGoal + 1;
         if (nextEntityGoal > lastGoal)
         {
             nextEntityGoal = Utilities.EntityType.Random;
         }
         nextGoal = nextEntityGoal;
+        failsCount = 0;
+    }
+
+    private void ResetAttentionJigglers()
+    {
+        foreach (var item in allItems)
+        {
+            item.DeactivateAttentionJiggler();
+        }
     }
 
     private void EntitySuccess()
@@ -523,9 +599,17 @@ public class GameManager : MonoBehaviour
     
     private void NothingToSummon()
     {
+        var chancesLeft = maxFails - failsCount;
         PlayOneShot(fail);
+        var text = $"DAMN! NOTHING WAS SUMMONED! \nGOTTA BE CAREFUL, {chancesLeft} CHANCES LEFT...";
+
+        if (chancesLeft <= 0)
+        {
+            text = "I'VE USED ALL MY CHANCES... \nUNKNOWN ENTITY IS COMING...";
+        }
+        
         failedText.gameObject.SetActive(true);
-        failedText.text = "DAMN! NOTHING WAS SUMMONED";
+        failedText.text = text;
         successText.gameObject.SetActive(false);
     }
 
@@ -543,6 +627,7 @@ public class GameManager : MonoBehaviour
         {
             StopJigglingCamera();
             NothingToSummon();
+            EnableHelperAttentionJiggler();
         }
         else
         {

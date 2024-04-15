@@ -13,6 +13,9 @@ public class item_controller : MonoBehaviour
     
     private Vector3 _initialPosition;
     private Quaternion _initialRotation;
+    public bool attentionJiggle;
+    private float _attentionJiggleInterval = 1.5f;
+    private float _lastAttentionJiggleTime;
     
     public Utilities.ElementsType elementType;
     // Start is called before the first frame update
@@ -28,7 +31,26 @@ public class item_controller : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        
+        AttentionJiggleHandler();
+    }
+
+    private void AttentionJiggleHandler()
+    {
+        if (attentionJiggle && _lastAttentionJiggleTime < Time.time)
+        {
+            myJiggler.StartJiggle();
+            _lastAttentionJiggleTime = Time.time + _attentionJiggleInterval;
+        }
+    }
+
+    public void ActivateAttentionJiggler()
+    {
+        attentionJiggle = true;
+    }
+    
+    public void DeactivateAttentionJiggler()
+    {
+        attentionJiggle = false;
     }
 
     public void Grab(GameObject grabbingPoint)
