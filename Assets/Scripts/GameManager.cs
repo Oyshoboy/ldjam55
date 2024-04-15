@@ -22,17 +22,20 @@ public class GameManager : MonoBehaviour
     public pot_manager potManager;
     public GameObject spawnEffectPrefab;
     public GameObject spawnEffectPoint;
+    public GameObject spawnErrorEffectPrefab;
     public FJiggling_Active camJiggle;
+    
      
     [Header("Configurations")]
     public float pointerDistance = 3f;
     public Vector3 handOnGrabRotation = new Vector3(0, 0, 0);
-    
+    public float rotationSpeed = 200f;
     public LayerMask grabMask;
     public LayerMask potMask;
 
     private Vector3 _average;
     private Vector3 _lastPosition;
+    private Quaternion _defaultSpawnRotation;
     private bool _isOnScreen;
     private bool _isGrabbing;
     private item_controller _grabbedItem;
@@ -54,11 +57,18 @@ public class GameManager : MonoBehaviour
     private CombinationRecords _recordPassed;
     private float timeForObserving;
     public float minTimeForObserving = 3f;
+    public Utilities.EntityType lastGoal = Utilities.EntityType.Hawking;
+    public bool isRotating;
     
     [Header("Game Flow")]
-    public TMP_Text goalText;
     public Utilities.EntityType nextGoal = Utilities.EntityType.CatKnight;
+    
+    [Header("Typography")]
+    public TMP_Text goalText;
     public GameObject helperBlinker;
+    public TMP_Text successText;
+    public TMP_Text failedText;
+    public TMP_Text entityText;
 
     private static readonly int Walkaway = Animator.StringToHash("walkaway");
 
@@ -70,8 +80,24 @@ public class GameManager : MonoBehaviour
         }
         
         camJiggle.enabled = false;
+        _defaultSpawnRotation = spawnPoint.transform.rotation;
         
-        goalText.text = "Summon: " + nextGoal.ToString();
+        UpdateGoalText(nextGoal);
+    }
+
+    private void UpdateGoalText(Utilities.EntityType entity)
+    {
+        var text = $"SUMMON: {entity.ToString()}";
+        if (entity == Utilities.EntityType.Random)
+        {
+            text = "HAVE FUN!";
+        }
+        UpdateGoalText(text);
+    }
+
+    private void UpdateGoalText(string text)
+    {
+        goalText.text = text;
     }
 
 
@@ -81,6 +107,30 @@ public class GameManager : MonoBehaviour
         HandleHandPosition();
         HandleAnimationState();
         ResetHandler();
+        RotateRunwayController();
+    }
+
+    private void RotateRunwayController()
+    {
+        var cameraAnimateState = cameraAnimator.GetBool(Observing);
+        var mousePressed = Input.GetMouseButton(0) && _grabbedItem == null;
+        if (summonStatus == Utilities.SummonStatus.Busy && cameraAnimateState)
+        {
+            if (mousePressed)
+            {
+                var rotate = Input.GetAxis("Mouse X") * Time.deltaTime * rotationSpeed;
+                spawnPoint.transform.Rotate(Vector3.up, -rotate);
+                if(!isRotating) isRotating = true;
+            }
+        }
+        else
+        {
+            if (isRotating)
+            {
+                isRotating = false;
+                spawnPoint.transform.rotation = _defaultSpawnRotation;
+            }
+        }
     }
 
     private void ResetHandler()
@@ -93,6 +143,7 @@ public class GameManager : MonoBehaviour
             helperBlinker.SetActive(false);
             cameraAnimator.SetBool(Observing, false);
             ResetObjects();
+            DisableTexts();
         }
 
         if (timeForObserving < Time.time && !helperBlinker.activeInHierarchy && summonStatus == Utilities.SummonStatus.Busy)
@@ -105,8 +156,9 @@ public class GameManager : MonoBehaviour
     {
         // reset all indicators
         potManager.ResetIndicators();
-        
+        UpdateGoalText(nextGoal);
         potManager.ResetAllItems();
+        entityText.text = "";
         
         // enable all items
         foreach (var item in allItems)
@@ -306,7 +358,9 @@ public class GameManager : MonoBehaviour
     {
         if (_recordPassed == null)
         {
+            timeForObserving -= minTimeForObserving / 2f;
             Debug.Log("Failed to summon");
+            var fx = Instantiate(spawnErrorEffectPrefab, spawnEffectPoint.transform.position, Quaternion.identity);
         }
         else
         {
@@ -325,6 +379,52 @@ public class GameManager : MonoBehaviour
 
         Invoke(nameof(SpawnStageTwo), .5f);
     }
+
+    private void NextGoalProcess()
+    {
+        EntitySuccess();
+        UpdateGoalText("");
+        var nextEntityGoal = nextGoal + 1;
+        if (nextEntityGoal > lastGoal)
+        {
+            nextEntityGoal = Utilities.EntityType.Random;
+        }
+        nextGoal = nextEntityGoal;
+    }
+
+    private void EntitySuccess()
+    {
+        failedText.gameObject.SetActive(false);
+        var text = $"NICE! I'VE SUMMONNED {nextGoal.ToString().ToUpper()}! \nWHO'S UP NEXT?";
+
+        if (nextGoal == lastGoal)
+        {
+            text = "WOW! I'VE SUMMONNED ALL THE ENTITIES! \nNOW I CAN DO WHATEVER I WANT!";
+        }
+        
+        successText.text = text;
+        successText.gameObject.SetActive(true);
+    }
+    
+    private void NotThiEntity()
+    {
+        failedText.gameObject.SetActive(true);
+        failedText.text = $"SNAP! THAT'S NOT A {nextGoal.ToString().ToUpper()}! \nI SHOULD TRY AGAIN...";
+        successText.gameObject.SetActive(false);
+    }
+    
+    private void NothingToSummon()
+    {
+        failedText.gameObject.SetActive(true);
+        failedText.text = "DAMN! NOTHING WAS SUMMONED";
+        successText.gameObject.SetActive(false);
+    }
+
+    private void DisableTexts()
+    {
+        failedText.gameObject.SetActive(false);
+        successText.gameObject.SetActive(false);
+    }
     
     private void SpawnStageTwo()
     {
@@ -332,6 +432,22 @@ public class GameManager : MonoBehaviour
         if (_recordPassed == null)
         {
             StopJigglingCamera();
+            NothingToSummon();
+        }
+        else
+        {
+            entityText.text = _recordPassed.result.ToString().ToUpper();
+            if (nextGoal != Utilities.EntityType.Random)
+            {
+                if (nextGoal == _recordPassed.result)
+                {
+                    NextGoalProcess();
+                }
+                else
+                {
+                    NotThiEntity();
+                }
+            }
         }
     }
 

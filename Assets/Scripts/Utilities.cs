@@ -18,7 +18,7 @@ public static class Utilities
         Crystal,
         BloodBag,
         Bone,
-        Herbs,
+        Veggies,
         Fang,
         Skin,
         Silver,
