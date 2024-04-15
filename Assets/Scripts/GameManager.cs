@@ -79,6 +79,7 @@ public class GameManager : MonoBehaviour
     private bool _isOnScreen;
     private bool _isGrabbing;
     private item_controller _grabbedItem;
+    public float maxRotationSpeed = 50f;
     
     
     public int smoothingBufferSize = 10;
@@ -132,6 +133,12 @@ public class GameManager : MonoBehaviour
     private void StopPlaying(AudioSource source)
     {
         source.Stop();
+    }
+
+    private void Awake()
+    {
+        //fps lock to 60
+        Application.targetFrameRate = 60;
     }
 
     private void Start()
@@ -230,6 +237,11 @@ public class GameManager : MonoBehaviour
             if (mousePressed)
             {
                 var rotate = Input.GetAxis("Mouse X") * Time.deltaTime * rotationSpeed;
+                
+                // limit rotation speed
+                if(rotate > maxRotationSpeed) rotate = maxRotationSpeed;
+                if(rotate < -maxRotationSpeed) rotate = -maxRotationSpeed;
+                
                 spawnPoint.transform.Rotate(Vector3.up, -rotate);
                 if(!isRotating) isRotating = true;
             }
