@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using FIMSpace.Jiggling;
 using Sirenix.Utilities;
+using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -19,6 +20,9 @@ public class GameManager : MonoBehaviour
     public GameObject[] allItems;
     public Animator cameraAnimator;
     public pot_manager potManager;
+    public GameObject spawnEffectPrefab;
+    public GameObject spawnEffectPoint;
+    public FJiggling_Active camJiggle;
      
     [Header("Configurations")]
     public float pointerDistance = 3f;
@@ -47,6 +51,14 @@ public class GameManager : MonoBehaviour
     
     [Header("Debug")]
     public GameObject summonedObject;
+    private CombinationRecords _recordPassed;
+    private float timeForObserving;
+    public float minTimeForObserving = 3f;
+    
+    [Header("Game Flow")]
+    public TMP_Text goalText;
+    public Utilities.EntityType nextGoal = Utilities.EntityType.CatKnight;
+    public GameObject helperBlinker;
 
     private static readonly int Walkaway = Animator.StringToHash("walkaway");
 
@@ -56,6 +68,10 @@ public class GameManager : MonoBehaviour
         {
             mainCamera = Camera.main;
         }
+        
+        camJiggle.enabled = false;
+        
+        goalText.text = "Summon: " + nextGoal.ToString();
     }
 
 
@@ -73,8 +89,15 @@ public class GameManager : MonoBehaviour
         
         if(cameraAnimateState && Input.GetKeyDown(KeyCode.Escape))
         {
+            if(timeForObserving > Time.time) return;
+            helperBlinker.SetActive(false);
             cameraAnimator.SetBool(Observing, false);
             ResetObjects();
+        }
+
+        if (timeForObserving < Time.time && !helperBlinker.activeInHierarchy && summonStatus == Utilities.SummonStatus.Busy)
+        {
+            helperBlinker.SetActive(true);
         }
     }
 
@@ -90,21 +113,25 @@ public class GameManager : MonoBehaviour
         {
             item.SetActive(true);
         }
-        
-        // destroy summoned object
-        var summonedAnimator = summonedObject.GetComponent<Animator>();
-        summonedObject.transform.localEulerAngles += new Vector3(0f, 55f , 0f);
-        if (summonedAnimator)
+
+        if (summonedObject)
         {
-            summonedAnimator.SetBool(Walkaway, true);
+            // destroy summoned object
+            var summonedAnimator = summonedObject.GetComponent<Animator>();
+            summonedObject.transform.localEulerAngles += new Vector3(0f, 55f, 0f);
+            if (summonedAnimator)
+            {
+                summonedAnimator.SetBool(Walkaway, true);
+            }
+
+            // destroy summoned object after 5 seconds
+            Destroy(summonedObject, 5f);
+            summonedObject = null;
         }
-        
-        // destroy summoned object after 5 seconds
-        Destroy(summonedObject, 5f);
-        
+
         // reset summon status
         UpdateSummonStatus(Utilities.SummonStatus.Ready);
-        summonedObject = null;
+        _recordPassed = null;
     }
 
     // ReSharper disable Unity.PerformanceAnalysis
@@ -246,8 +273,9 @@ public class GameManager : MonoBehaviour
     {
         if(summonStatus != Utilities.SummonStatus.Ready) return;
         UpdateSummonStatus(Utilities.SummonStatus.Busy);
+        camJiggle.enabled = true;
         
-        CombinationRecords recordPassed = null;
+        _recordPassed = null;
         var combinations = combinationsMenu.combinations;
         var itemOne = items[0].elementType;
         var itemTwo = items[1].elementType;
@@ -265,31 +293,51 @@ public class GameManager : MonoBehaviour
             
             if (list.Contains(itemOne) && list.Contains(itemTwo) && list.Contains(itemThree))
             {
-                recordPassed = combinations[i];
+                _recordPassed = combinations[i];
                 break;
             }
         }
+        
+        timeForObserving = Time.time + minTimeForObserving;
+        Invoke(nameof(SpawnStageOne), 1f);
+    }
 
-        if (recordPassed == null)
+    private void SpawnStageOne()
+    {
+        if (_recordPassed == null)
         {
             Debug.Log("Failed to summon");
         }
         else
         {
-            Debug.Log("Summoned: " + recordPassed.result.ToString());
-            var toSpawn = entitiesMenu.entities.Find(x => x.type == recordPassed.result).prefab;
-            
+            Debug.Log("Summoned: " + _recordPassed.result.ToString());
+            var toSpawn = entitiesMenu.entities.Find(x => x.type == _recordPassed.result).prefab;
             if (toSpawn)
             {
-                cameraAnimator.SetBool(Observing, true);
+                StopJigglingCamera();
+                var fx = Instantiate(spawnEffectPrefab, spawnEffectPoint.transform.position, Quaternion.identity);
                 var spawned = Instantiate(toSpawn, spawnPoint.transform.position, Quaternion.Euler(Vector3.zero));
                 spawned.transform.SetParent(spawnPoint.transform);
                 spawned.transform.localRotation = Quaternion.Euler(Vector3.zero);
                 summonedObject = spawned;
             }
         }
-        
-        
+
+        Invoke(nameof(SpawnStageTwo), .5f);
+    }
+    
+    private void SpawnStageTwo()
+    {
+        cameraAnimator.SetBool(Observing, true);
+        if (_recordPassed == null)
+        {
+            StopJigglingCamera();
+        }
+    }
+
+    private void StopJigglingCamera()
+    {
+        camJiggle.enabled = false;
     }
 
     private void UpdateSummonStatus(Utilities.SummonStatus newStatus)

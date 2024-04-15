@@ -31,7 +31,7 @@ public static class Utilities
     {
         Random,
         CatKnight,
-        Wolverine,
+        Werewolf,
         CrystalGolem,
         Einstein,
         Vampire,
