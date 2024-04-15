@@ -12,25 +12,33 @@ public class pot_manager : MonoBehaviour
     public MeshRenderer[] indicators;
     public Material indicatorOn;
     public Material indicatorOff;
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
-    }
+    public GameManager gameManager;
 
     public void PutItem(item_controller item)
     {
         myJiggler.StartJiggle();
         splash.Play();
         items.Add(item);
+
+        if (items.Count == 3)
+        {
+            gameManager.StartSummoning(items);
+        }
         
-        if(items.Count - 1 > indicators.Length) return;
+        if(items.Count > indicators.Length) return;
         indicators[items.Count - 1].material = indicatorOn;
+    }
+
+    public void ResetIndicators()
+    {
+        foreach (var indicator in indicators)
+        {
+            indicator.material = indicatorOff;
+        }
+    }
+
+    public void ResetAllItems()
+    {
+        items.Clear();
     }
 }

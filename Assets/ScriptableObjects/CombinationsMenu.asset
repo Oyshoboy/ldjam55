@@ -1,0 +1,69 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bd7410ee9a2c4b0a958ac9e7999e9bb, type: 3}
+  m_Name: CombinationsMenu
+  m_EditorClassIdentifier: 
+  serializationData:
+    SerializedFormat: 2
+    SerializedBytes: 
+    ReferencedUnityObjects: []
+    SerializedBytesString: 
+    Prefab: {fileID: 0}
+    PrefabModificationsReferencedUnityObjects: []
+    PrefabModifications: []
+    SerializationNodes: []
+  combinations:
+  - recipe:
+      itemOne: 10
+      itemTwo: 11
+      itemThree: 9
+    result: 1
+  - recipe:
+      itemOne: 10
+      itemTwo: 7
+      itemThree: 11
+    result: 2
+  - recipe:
+      itemOne: 2
+      itemTwo: 3
+      itemThree: 12
+    result: 3
+  - recipe:
+      itemOne: 10
+      itemTwo: 1
+      itemThree: 4
+    result: 4
+  - recipe:
+      itemOne: 10
+      itemTwo: 8
+      itemThree: 4
+    result: 6
+  - recipe:
+      itemOne: 12
+      itemTwo: 4
+      itemThree: 7
+    result: 5
+  - recipe:
+      itemOne: 5
+      itemTwo: 12
+      itemThree: 2
+    result: 7
+  - recipe:
+      itemOne: 2
+      itemTwo: 6
+      itemThree: 5
+    result: 8
+  - recipe:
+      itemOne: 6
+      itemTwo: 10
+      itemThree: 1
+    result: 9

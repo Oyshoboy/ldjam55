@@ -51,7 +51,10 @@ public class item_controller : MonoBehaviour
 
     public void PlacedToPot()
     {
-        Debug.Log($"{myParent.name} placed to pot");
+        text.gameObject.SetActive(false);
         myParent.SetActive(false);
+        myParent.transform.SetParent(null);
+        myParent.transform.position = _initialPosition;
+        myParent.transform.rotation = _initialRotation;
     }
 }

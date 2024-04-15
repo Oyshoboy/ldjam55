@@ -4,11 +4,17 @@ using UnityEngine;
 
 public static class Utilities
 {
+    public enum SummonStatus
+    {
+        Ready,
+        Busy,
+    }
+    
     public enum ElementsType
     {
         Unknown,
         Brain,
-        Potion,
+        Essence,
         Crystal,
         BloodBag,
         Bone,
@@ -18,6 +24,29 @@ public static class Utilities
         Silver,
         Homunculus,
         Fur,
-        Minerals,
+        Ashes,
+    }
+
+    public enum EntityType
+    {
+        Random,
+        CatKnight,
+        Wolverine,
+        CrystalGolem,
+        Einstein,
+        Vampire,
+        Butcher,
+        Skeleton,
+        SwampThing,
+        Hawking,
+    }
+    
+    public enum FailedEntityType
+    {
+        Random,
+        Explosion,
+        WormBite,
+        Skull,
+        Screamer
     }
 }
