@@ -20,11 +20,15 @@ public class GameManager : MonoBehaviour
     public AudioSource walkaway;
     public AudioSource lightsOn;
     public AudioSource victory;
-    
+    public AudioSource click;
+
     [Header("Intro management")]
     public GameObject lights;
     public bool introComplete = false;
     public TMP_Text introText;
+    private int _lastIntroWord;
+    private float _lastIntroWordPlaced;
+    public float introSpeed = .3f;
     
     [Header("References")]
     public GameObject hand;
@@ -77,6 +81,7 @@ public class GameManager : MonoBehaviour
     public float minTimeForObserving = 3f;
     public Utilities.EntityType lastGoal = Utilities.EntityType.Hawking;
     public bool isRotating;
+    private string[] _cachedIntroText;
     
     [Header("Game Flow")]
     public Utilities.EntityType nextGoal = Utilities.EntityType.KnightKitty;
@@ -109,6 +114,9 @@ public class GameManager : MonoBehaviour
         _defaultSpawnRotation = spawnPoint.transform.rotation;
         
         UpdateGoalText(nextGoal);
+        
+        var sample = "So, another working day at the ritual bureau. My task for today is to summon some very important entities, but I can barely remember the ingredients. Hopefully, I'll finish it soon...";
+        _cachedIntroText = sample.Split(' ');
     }
 
     private void UpdateGoalText(Utilities.EntityType entity)
@@ -134,6 +142,40 @@ public class GameManager : MonoBehaviour
         HandleAnimationState();
         ResetHandler();
         RotateRunwayController();
+        IntroTextTyper();
+    }
+
+    private void IntroTextTyper()
+    {
+       
+        if (!introComplete)
+        {
+            if (_lastIntroWord >= _cachedIntroText.Length) return;
+            if (Time.time < 2f) return;
+            if (_lastIntroWordPlaced > Time.time) return;
+
+            // append word by word to the intro text
+            var currentText = introText.text;
+            
+                if (_lastIntroWord < _cachedIntroText.Length)
+                {
+                    var nextWord = _cachedIntroText[_lastIntroWord];
+                    currentText += " " + nextWord;
+                    introText.text = currentText;
+                    _lastIntroWord++;
+                    
+                    PlayOneShot(click);
+                    
+                    var delay = introSpeed;
+
+                    if (nextWord.Contains("."))
+                    {
+                        delay = introSpeed * 25;
+                    }
+                    _lastIntroWordPlaced = Time.time + (delay * UnityEngine.Random.Range(.8f, 1.2f));
+                }
+                
+        }
     }
 
     private void RotateRunwayController()
