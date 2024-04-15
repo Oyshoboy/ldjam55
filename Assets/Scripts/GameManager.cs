@@ -9,17 +9,24 @@ public class GameManager : MonoBehaviour
     public GameObject hand;
     public Animator pointerAnimator;
     public Camera mainCamera;
+    public GameObject handCart;
 
     public GameObject trackingPoint;
     public Transform lookAtPoint;
+    public GameObject grabbingPoint;
     
     [Header("Configurations")]
     public float pointerDistance = 3f;
+    public Vector3 handOnGrabRotation = new Vector3(0, 0, 0);
+    
+    public LayerMask grabMask;
+    public LayerMask potMask;
 
     private Vector3 _average;
     private Vector3 _lastPosition;
     private bool _isOnScreen;
     private bool _isGrabbing;
+    private item_controller _grabbedItem;
     
     
     public int listSize = 10;
@@ -47,12 +54,90 @@ public class GameManager : MonoBehaviour
             pointerAnimator.SetBool("Natural", false);
             pointerAnimator.SetBool("GrabLarge", true);
             _isGrabbing = true;
+            GrabCheck();
         }
         else if((Input.GetMouseButtonUp(0) || !_isOnScreen) && _isGrabbing)
         {
             pointerAnimator.SetBool("GrabLarge", false);
             pointerAnimator.SetBool("Natural", true);
             _isGrabbing = false;
+            
+            if (!_grabbedItem) return;
+            
+            
+            var potDetected = PotDetector();
+            if (potDetected)
+            {
+                _grabbedItem.PlaceToPot();
+                _grabbedItem = null;
+                MoveHandWhenGrabbing(false);
+                potDetected.ItemPlaced();
+            } else
+            {
+                _grabbedItem.Release();
+                _grabbedItem = null;
+                MoveHandWhenGrabbing(false);
+            }
+        }
+    }
+
+    private pot_manager PotDetector()
+    {
+        var from = mainCamera.transform.position;
+        // forward from camera
+        var direction = trackingPoint.transform.position - from;
+        Ray ray = new Ray(from, direction);
+        RaycastHit hit;
+        
+        var layerMaskInt = potMask.value;
+        Debug.Log("pot detector");
+        
+        if (Physics.SphereCast(ray, .1f, out hit, 20f, layerMaskInt))
+        {
+            if (hit.collider.CompareTag("pot"))
+            {
+                var potController = hit.collider.GetComponent<pot_manager>();
+                return potController;
+            }
+        }
+        return null;
+    }
+
+    private void GrabCheck()
+    {
+        var from = mainCamera.transform.position;
+        // forward from camera
+        var direction = trackingPoint.transform.position - from;
+        Ray ray = new Ray(from, direction);
+        RaycastHit hit;
+
+        var layerMaskInt = grabMask.value;
+        
+        
+        if (Physics.SphereCast(ray, .1f, out hit, 20f, layerMaskInt))
+        {
+            if (hit.collider.CompareTag("grabbable") && !_grabbedItem)
+            {
+                var hitGrabController = hit.collider.GetComponent<item_controller>();
+                if (hitGrabController)
+                {
+                    MoveHandWhenGrabbing(true);
+                    hitGrabController.Grab(grabbingPoint);
+                    _grabbedItem = hitGrabController;
+                }
+            }
+            
+            Debug.Log(hit.collider.name);
+        }
+    }
+
+    private void MoveHandWhenGrabbing(bool b)
+    {
+        if (b)
+        {
+            handCart.transform.localEulerAngles = handOnGrabRotation;
+        } else {
+            handCart.transform.localEulerAngles = Vector3.zero;
         }
     }
 
