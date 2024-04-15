@@ -82,6 +82,7 @@ public class GameManager : MonoBehaviour
     public Utilities.EntityType lastGoal = Utilities.EntityType.Hawking;
     public bool isRotating;
     private string[] _cachedIntroText;
+    private bool _mainIntroComplete;
     
     [Header("Game Flow")]
     public Utilities.EntityType nextGoal = Utilities.EntityType.KnightKitty;
@@ -115,7 +116,7 @@ public class GameManager : MonoBehaviour
         
         UpdateGoalText(nextGoal);
         
-        var sample = "So, another working day at the ritual bureau. My task for today is to summon some very important entities, but I can barely remember the ingredients. Hopefully, I'll finish it soon...";
+        var sample = "So, another working day at the ritual bureau. My task for today is to summon some very important entities. But I can barely remember the ingredients. Hopefully, I'll finish it soon...";
         _cachedIntroText = sample.Split(' ');
     }
 
@@ -150,9 +151,21 @@ public class GameManager : MonoBehaviour
        
         if (!introComplete)
         {
-            if (_lastIntroWord >= _cachedIntroText.Length) return;
             if (Time.time < 2f) return;
             if (_lastIntroWordPlaced > Time.time) return;
+            if (_lastIntroWord >= _cachedIntroText.Length)
+            {
+
+                if (!_mainIntroComplete)
+                {
+                    var controlsText = "\n\n\t\t<color=grey><color=#3EFFC7>[LMB]</color> TO GRAB ITEMS\n\t\t<color=#3EFFC7>[ESC]</color> TO BEGIN</color>";
+                    introText.text += controlsText;
+                    _mainIntroComplete = true;
+                    PlayOneShot(click);
+                }
+
+                return;
+            }
 
             // append word by word to the intro text
             var currentText = introText.text;
@@ -170,7 +183,7 @@ public class GameManager : MonoBehaviour
 
                     if (nextWord.Contains("."))
                     {
-                        delay = introSpeed * 25;
+                        delay = introSpeed * 35;
                     }
                     _lastIntroWordPlaced = Time.time + (delay * UnityEngine.Random.Range(.8f, 1.2f));
                 }
