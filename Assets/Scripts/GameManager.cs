@@ -30,6 +30,15 @@ public class GameManager : MonoBehaviour
     public AudioSource stomping;
     public AudioSource metal_ambient;
     public AudioSource heartbeat;
+    public AudioSource laughing;
+    public AudioSource friendly;
+    public Animator screamerAnimator;
+    public int screamerIndex = 0;
+    public bool screamerInProgress;
+    public GameObject flashPrefab;
+    public GameObject doll;
+    public GameObject flowerObject;
+    public GameObject screamerObject;
 
     [Header("Intro management")]
     public GameObject lights;
@@ -106,13 +115,23 @@ public class GameManager : MonoBehaviour
     public TMP_Text entityText;
 
     private static readonly int Walkaway = Animator.StringToHash("walkaway");
+    private static readonly int Appeared = Animator.StringToHash("appeared");
 
-    private void PlayOneShot(AudioSource source)
+    private void PlayOneShot(AudioSource source, bool randomizePitch = true)
     {
-        var sourcePitch = source.pitch;
-        var pitch = sourcePitch >= 0.85f ? UnityEngine.Random.Range(.9f, 1.1f) : sourcePitch;
-        source.pitch = pitch;
+        if (randomizePitch)
+        {
+            var sourcePitch = source.pitch;
+            var pitch = sourcePitch >= 0.85f ? UnityEngine.Random.Range(.9f, 1.1f) : sourcePitch;
+            source.pitch = pitch;
+        }
+
         source.PlayOneShot(source.clip);
+    }
+    
+    private void StopPlaying(AudioSource source)
+    {
+        source.Stop();
     }
 
     private void Start()
@@ -229,12 +248,13 @@ public class GameManager : MonoBehaviour
     {
         var cameraAnimateState = cameraAnimator.GetBool(Observing);
         
-        if(cameraAnimateState && Input.GetKeyDown(KeyCode.Escape))
+        if(cameraAnimateState && Input.GetKeyDown(KeyCode.Escape) && !screamerInProgress)
         {
             if(timeForObserving > Time.time) return;
             helperBlinker.SetActive(false);
             cameraAnimator.SetBool(Observing, false);
             PlayOneShot(whoosh);
+            StopPlaying(metal_ambient);
             ResetObjects();
             DisableTexts();
             
@@ -246,7 +266,7 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (timeForObserving < Time.time && !helperBlinker.activeInHierarchy && summonStatus == Utilities.SummonStatus.Busy)
+        if (timeForObserving < Time.time && !helperBlinker.activeInHierarchy && summonStatus == Utilities.SummonStatus.Busy && !screamerInProgress)
         {
             helperBlinker.SetActive(true);
         }
@@ -467,6 +487,7 @@ public class GameManager : MonoBehaviour
             if (failsCount >= maxFails)
             {
                 failsCount = maxFails;
+                StartHorrorCycle();
             }
             
         }
@@ -486,13 +507,20 @@ public class GameManager : MonoBehaviour
         {
             timeForObserving -= minTimeForObserving / 2f;
             Debug.Log("Failed to summon");
-            var fx = Instantiate(spawnErrorEffectPrefab, spawnEffectPoint.transform.position, Quaternion.identity);
             
             var chancesLeft = maxFails - failsCount;
 
             if (chancesLeft <= 0)
             {
                 PlayOneShot(impact);
+                PlayOneShot(metal_ambient);
+                //Suspience();
+                PlayOneShot(heartbeat);
+                var fx = Instantiate(flashPrefab, spawnEffectPoint.transform.position, Quaternion.identity);
+            }
+            else
+            {
+                var fx = Instantiate(spawnErrorEffectPrefab, spawnEffectPoint.transform.position, Quaternion.identity);
             }
         }
         else
@@ -512,6 +540,11 @@ public class GameManager : MonoBehaviour
         }
 
         Invoke(nameof(SpawnStageTwo), .5f);
+    }
+
+    private void Suspience()
+    {
+        PlayOneShot(suspience);
     }
 
     private void EnableHelperAttentionJiggler()
@@ -558,6 +591,11 @@ public class GameManager : MonoBehaviour
             nextEntityGoal = Utilities.EntityType.Random;
         }
         nextGoal = nextEntityGoal;
+        ResetFails();
+    }
+
+    private void ResetFails()
+    {
         failsCount = 0;
     }
 
@@ -597,6 +635,15 @@ public class GameManager : MonoBehaviour
         successText.gameObject.SetActive(false);
     }
     
+    private void EntityIsKind()
+    {
+        successText.gameObject.SetActive(true);
+        successText.text = $"WHOOSH! SHE IS KIND AND FRIENDLY! \nI SHOULD BE MORE CAREFUL...";
+        failedText.gameObject.SetActive(false);
+    }
+    
+    
+    
     private void NothingToSummon()
     {
         var chancesLeft = maxFails - failsCount;
@@ -619,15 +666,32 @@ public class GameManager : MonoBehaviour
         successText.gameObject.SetActive(false);
     }
     
+    private void DelayeStomping()
+    {
+        PlayOneShot(stomping, false);
+    }
+    
     private void SpawnStageTwo()
     {
         cameraAnimator.SetBool(Observing, true);
         PlayOneShot(whoosh);
         if (_recordPassed == null)
         {
-            StopJigglingCamera();
             NothingToSummon();
             EnableHelperAttentionJiggler();
+            
+            var chancesLeft = maxFails - failsCount;
+
+            if (chancesLeft <= 0)
+            {
+                Invoke(nameof(DelayeStomping), 1.35f);
+                Invoke(nameof(RevealHorror), 3f);
+                Invoke(nameof(ScreamerFinal), 10f);
+            }
+            else
+            {
+                StopJigglingCamera();
+            }
         }
         else
         {
@@ -645,6 +709,68 @@ public class GameManager : MonoBehaviour
             }
         }
     }
+
+    private void ScreamerFinal()
+    {
+        float timer = 5f;
+        if(screamerIndex == 0)
+        {
+            EntityIsKind();
+            PlayOneShot(friendly);
+            flowerObject.SetActive(true);
+        }
+        else
+        {
+            DisableTexts();
+            PlayOneShot(night_scream);
+            screamerObject.SetActive(true);
+            timer = 3f;
+        }
+        
+        Invoke(nameof(HideScreamer), timer);
+    }
+
+    private void HideScreamer()
+    {
+        HideHorror();
+        if(screamerIndex == 0)
+        {
+            PlayOneShot(laughing);
+        }
+        else
+        {
+            PlayOneShot(horror_reveal);
+            screamerObject.SetActive(false);
+        }
+        screamerIndex = screamerIndex == 0 ? 1 : 0;
+        Invoke(nameof(FinishHorrorCycle), 3f);
+    }
+    
+    private void StartHorrorCycle()
+    {
+        screamerInProgress = true;
+        doll.SetActive(true);
+    }
+
+    private void FinishHorrorCycle()
+    {
+        flowerObject.SetActive(false);
+        screamerInProgress = false;
+        doll.SetActive(false);
+        StopJigglingCamera();
+        ResetFails();
+    }
+
+    private void RevealHorror()
+    {
+        screamerAnimator.SetBool(Appeared, true);
+    }
+    
+    private void HideHorror()
+    {
+        screamerAnimator.SetBool(Appeared, false);
+    }
+    
 
     private void StopJigglingCamera()
     {
