@@ -11,6 +11,7 @@ public class pot_manager : MonoBehaviour
     public List<item_controller> items = new List<item_controller>();
     public MeshRenderer[] indicators;
     public Material indicatorOn;
+    public Material indicatorWrong;
     public Material indicatorOff;
     public GameManager gameManager;
 
@@ -26,7 +27,19 @@ public class pot_manager : MonoBehaviour
         }
         
         if(items.Count > indicators.Length) return;
-        indicators[items.Count - 1].material = indicatorOn;
+        
+        var itemsNeeded = gameManager.GetItemsNeeded();
+        var nextIndicatorMaterial = indicatorWrong;
+
+        foreach (var currentItem in itemsNeeded)
+        {
+            if (currentItem == item.elementType)
+            {
+                nextIndicatorMaterial = indicatorOn;
+            }
+        }
+        
+        indicators[items.Count - 1].material = nextIndicatorMaterial;
     }
 
     public void ResetIndicators()

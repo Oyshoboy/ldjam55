@@ -15061,16 +15061,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 818591970}
-  m_LocalRotation: {x: -0.0066023497, y: -0.17327587, z: 0.037498686, w: 0.98413706}
-  m_LocalPosition: {x: 0, y: 0, z: 0.28}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalRotation: {x: -0.0066493475, y: -0.17500444, z: 0.016668847, w: 0.984404}
+  m_LocalPosition: {x: 0, y: 0, z: -6.64}
+  m_LocalScale: {x: 0.13008666, y: 0.13008666, z: 0.13008666}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 262010359}
-  m_LocalEulerAnglesHint: {x: 0, y: -19.971, z: 4.364}
+  m_LocalEulerAnglesHint: {x: -0.416, y: -20.168, z: 2.014}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -3.21, y: -1.07}
+  m_AnchoredPosition: {x: -0.187, y: -0.83}
   m_SizeDelta: {x: 5, y: 2}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &818591972
@@ -15093,7 +15093,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: MY NEXT TARGET
+  m_text: SUMMON THIS ENTITY
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
   m_sharedMaterial: {fileID: 2140474, guid: 8a89fa14b10d46a99122fd4f73fca9a2, type: 2}
@@ -22342,8 +22342,8 @@ Transform:
   m_GameObject: {fileID: 1259992570}
   serializedVersion: 2
   m_LocalRotation: {x: -0.8478804, y: 0.5301876, z: -0, w: -0.000000037252903}
-  m_LocalPosition: {x: -5.05, y: -1.65, z: 0}
-  m_LocalScale: {x: 0.069592535, y: 0.10728, z: 0.10728}
+  m_LocalPosition: {x: -0.35, y: -0.91, z: -6.76}
+  m_LocalScale: {x: 0.010673102, y: 0.016453063, z: 0.016453063}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 262010359}
@@ -23932,6 +23932,7 @@ MonoBehaviour:
   - {fileID: 1474400725}
   - {fileID: 2142685552}
   indicatorOn: {fileID: 2100000, guid: df3aa4db32e554375b3d512d4732c8dc, type: 2}
+  indicatorWrong: {fileID: 2100000, guid: 698f174eff3564c479efe6daeb973899, type: 2}
   indicatorOff: {fileID: 2100000, guid: f0dabf75eb50245c9a410bab50d5274e, type: 2}
   gameManager: {fileID: 381007834}
 --- !u!135 &1579916807

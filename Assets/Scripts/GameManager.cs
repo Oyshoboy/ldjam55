@@ -195,7 +195,7 @@ public class GameManager : MonoBehaviour
 
                 if (!_mainIntroComplete)
                 {
-                    var controlsText = "\n\n\t\t<color=grey><color=#3EFFC7>[LMB]</color> TO GRAB ITEMS\n\t\t<color=#3EFFC7>[ESC]</color> TO BEGIN</color>";
+                    var controlsText = "\n\n<size=2.5>\t\t<color=grey><color=#3EFFC7>Combine ingredients</color> to summon entities</color>\n\t\t<color=grey><color=#3EFFC7>[LMB]</color> TO GRAB ITEMS\n\t\t<color=#3EFFC7>[ESC]</color> TO BEGIN</color></size>";
                     introText.text += controlsText;
                     _mainIntroComplete = true;
                     PlayOneShot(click);
@@ -792,5 +792,23 @@ public class GameManager : MonoBehaviour
     private void UpdateSummonStatus(Utilities.SummonStatus newStatus)
     {
         summonStatus = newStatus;
+    }
+
+    public Utilities.ElementsType[] GetItemsNeeded()
+    {
+        var current = new Utilities.ElementsType[3];
+        
+        foreach (var item in combinationsMenu.combinations)
+        {
+            if (item.result == nextGoal)
+            {
+                current[0] = item.recipe.itemOne;
+                current[1] = item.recipe.itemTwo;
+                current[2] = item.recipe.itemThree;
+                break;
+            }
+        }
+        
+        return current;
     }
 }
